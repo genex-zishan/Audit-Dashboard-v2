@@ -372,33 +372,51 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
     </select>
   </div>
   <div class="filter-sep"></div>
-  <div class="filter-group">
-    <span class="filter-label">Skill</span>
-    <select class="filter-select" id="fSkill" onchange="applyFilters()" style="min-width:180px">
-      <option value="all">All Skills</option>
-      <optgroup label="── Inbound ──">
-        <option value="Mass">Mass</option>
-        <option value="Premium">Premium</option>
-        <option value="KCP">KCP</option>
-        <option value="Retailer">Retailer</option>
-        <option value="158">158</option>
-        <option value="HR Helpline">HR Helpline</option>
-        <option value="RM">RM</option>
-        <option value="Second Tier">Second Tier</option>
-        <option value="GPFI & ALO">GPFI & ALO</option>
-        <option value="Tier_Whatsapp">Tier_Whatsapp</option>
-        <option value="Skitto_121">Skitto_121</option>
-      </optgroup>
-      <optgroup label="── Digital ──">
-        <option value="Live Chat">Live Chat</option>
-        <option value="Email">Email</option>
-        <option value="Social Media">Social Media</option>
-        <option value="Skitto_Email">Skitto_Email</option>
-        <option value="Skitto_Messenger">Skitto_Messenger</option>
-        <option value="Skitto_Social Media">Skitto_Social Media</option>
-        <option value="Whatsapp">Whatsapp</option>
-      </optgroup>
-    </select>
+  <div class="filter-group" style="position:relative">
+    <span class="filter-label">Skill / LOB</span>
+    <div id="skillMultiWrap" style="position:relative;min-width:160px">
+      <button id="skillDropBtn" onclick="toggleSkillDrop(event)" style="
+        background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);
+        padding:6px 30px 6px 12px;font-size:0.82rem;color:var(--text-primary);cursor:pointer;
+        outline:none;transition:var(--transition);min-width:160px;text-align:left;width:100%;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;
+      ">All Skills
+        <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:0.65rem;color:var(--text-muted)">▼</span>
+      </button>
+      <div id="skillDropPanel" style="
+        display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:500;
+        background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-md);
+        min-width:200px;max-height:320px;overflow-y:auto;box-shadow:var(--shadow-lg);padding:6px 0;
+      ">
+        <div style="padding:6px 12px 4px;border-bottom:1px solid var(--border-muted);display:flex;gap:8px">
+          <button onclick="selectAllSkills()" style="flex:1;padding:3px 8px;border-radius:6px;border:1px solid var(--blue);background:var(--blue-dim);color:var(--blue);font-size:0.72rem;font-weight:600;cursor:pointer;">All</button>
+          <button onclick="clearAllSkills()" style="flex:1;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:0.72rem;font-weight:600;cursor:pointer;">None</button>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:0.82rem;border-bottom:1px solid var(--border-muted)" onclick="event.stopPropagation()">
+          <input type="checkbox" id="skillOpt_all" onchange="onSkillAllToggle(this)" checked style="accent-color:var(--blue)"> All Skills
+        </label>
+        <div style="padding:4px 14px 2px;font-size:0.65rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px">Inbound</div>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Mass" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Mass</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Premium" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Premium</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="KCP" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> KCP</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Retailer" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Retailer</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="158" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> 158</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="HR Helpline" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> HR Helpline</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="RM" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> RM</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Second Tier" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Second Tier</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="GPFI & ALO" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> GPFI &amp; ALO</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Tier_Whatsapp" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Tier_Whatsapp</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Skitto_121" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Skitto_121</label>
+        <div style="padding:4px 14px 2px;font-size:0.65rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;border-top:1px solid var(--border-muted);margin-top:2px">Digital</div>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Live Chat" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Live Chat</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Email" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Email</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Social Media" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Social Media</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Skitto_Email" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Skitto_Email</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Skitto_Messenger" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Skitto_Messenger</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Skitto_Social Media" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Skitto_Social Media</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Whatsapp" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Whatsapp</label>
+      </div>
+    </div>
   </div>
   <div class="filter-sep"></div>
   <div class="filter-group">
@@ -570,7 +588,7 @@ const COLORS_A = COLORS.map(c => c + '55');
 
 // ── COLUMN MAPS (verified against actual CSVs) ──────────────────────────────
 const INBOUND_MAP = {
-  result:21, skill:22, party:212, agentId:194, tl:196,
+  result:205, skill:207, party:212, agentId:194, tl:196,
   empPass:203, empFail:204,
   rtcPass:210, rtcFail:211,
   month:218,
@@ -587,7 +605,7 @@ const INBOUND_MAP = {
 };
 
 const DIGITAL_MAP = {
-  result:21, skill:22, party:228, agentId:215, tl:216,
+  result:219, skill:224, party:228, agentId:215, tl:216,
   empPass:217, empFail:218,
   rtcPass:222, rtcFail:223,
   month:229,
@@ -604,7 +622,7 @@ const DIGITAL_MAP = {
 };
 
 const SKITTO_MAP = {
-  result:21, skill:22, agentId:194, tl:195,
+  result:198, skill:203, agentId:194, tl:195,
   empPass:196, empFail:197,
   rtcPass:201, rtcFail:202,
   month:204,
@@ -990,9 +1008,9 @@ function updateDataStatusBar() {
 //  FILTERS
 // ═══════════════════════════════════════════
 function clearFilters() {
-  ['fMonth','fParty','fChannel','fSkill','fResult','fYear'].forEach(id => document.getElementById(id).value = 'all');
+  ['fMonth','fParty','fChannel','fResult','fYear'].forEach(id => document.getElementById(id).value = 'all');
   document.getElementById('fSearch').value = '';
-  applyFilters();
+  selectAllSkills();
 }
 
 function applyFilters() {
@@ -1000,16 +1018,16 @@ function applyFilters() {
   const year    = document.getElementById('fYear').value;
   const party   = document.getElementById('fParty').value;
   const channel = document.getElementById('fChannel').value;
-  const skill   = document.getElementById('fSkill').value;
   const result  = document.getElementById('fResult').value;
   const search  = document.getElementById('fSearch').value.toLowerCase();
+  const selectedSkills = getSelectedSkills();
 
   filteredRows = rawRows.filter(r =>
     (month   === 'all' || r.month   === month)   &&
     (year    === 'all' || r.year    === year)     &&
     (party   === 'all' || r.party   === party)   &&
     (channel === 'all' || r.channel === channel) &&
-    (skill   === 'all' || r.skill   === skill)   &&
+    (selectedSkills === null || selectedSkills.has(r.skill)) &&
     (result  === 'all' || r.result  === result)  &&
     (!search || r.agentId.toLowerCase().includes(search) || r.tl.toLowerCase().includes(search))
   );
@@ -1508,7 +1526,76 @@ function startCountdown() {
 // ═══════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════
-window.addEventListener('DOMContentLoaded', async () => {
+// ═══════════════════════════════════════════
+//  SKILL MULTI-SELECT
+// ═══════════════════════════════════════════
+function toggleSkillDrop(e) {
+  e.stopPropagation();
+  const panel = document.getElementById('skillDropPanel');
+  const btn   = document.getElementById('skillDropBtn');
+  const open  = panel.style.display === 'block';
+  panel.style.display = open ? 'none' : 'block';
+  btn.style.borderColor = open ? 'var(--border)' : 'var(--blue)';
+}
+document.addEventListener('click', () => {
+  const panel = document.getElementById('skillDropPanel');
+  const btn   = document.getElementById('skillDropBtn');
+  if (panel && panel.style.display === 'block') {
+    panel.style.display = 'none';
+    if (btn) btn.style.borderColor = 'var(--border)';
+  }
+});
+function getSelectedSkills() {
+  const allChk = document.getElementById('skillOpt_all');
+  if (allChk && allChk.checked) return null; // null = all skills
+  const checked = [...document.querySelectorAll('.skill-chk:checked')].map(c => c.value);
+  return checked.length ? new Set(checked) : null;
+}
+function updateSkillDropBtn() {
+  const allChk  = document.getElementById('skillOpt_all');
+  const checked = [...document.querySelectorAll('.skill-chk:checked')];
+  const total   = document.querySelectorAll('.skill-chk').length;
+  const btn     = document.getElementById('skillDropBtn');
+  if (!btn) return;
+  if ((allChk && allChk.checked) || checked.length === total) {
+    btn.childNodes[0].textContent = 'All Skills';
+  } else if (checked.length === 0) {
+    btn.childNodes[0].textContent = 'No Skills';
+  } else if (checked.length === 1) {
+    btn.childNodes[0].textContent = checked[0].value;
+  } else {
+    btn.childNodes[0].textContent = `${checked.length} Skills`;
+  }
+}
+function onSkillAllToggle(chkEl) {
+  document.querySelectorAll('.skill-chk').forEach(c => c.checked = false);
+  updateSkillDropBtn();
+  applyFilters();
+}
+function onSkillChkChange() {
+  const allChk = document.getElementById('skillOpt_all');
+  if (allChk) allChk.checked = false;
+  const checked = [...document.querySelectorAll('.skill-chk:checked')];
+  const total   = document.querySelectorAll('.skill-chk').length;
+  if (checked.length === total && allChk) allChk.checked = true;
+  updateSkillDropBtn();
+  applyFilters();
+}
+function selectAllSkills() {
+  const allChk = document.getElementById('skillOpt_all');
+  if (allChk) allChk.checked = true;
+  document.querySelectorAll('.skill-chk').forEach(c => c.checked = false);
+  updateSkillDropBtn();
+  applyFilters();
+}
+function clearAllSkills() {
+  const allChk = document.getElementById('skillOpt_all');
+  if (allChk) allChk.checked = false;
+  document.querySelectorAll('.skill-chk').forEach(c => c.checked = false);
+  updateSkillDropBtn();
+}
+
+
   initCharts();
   await fetchData();
   startCountdown();
