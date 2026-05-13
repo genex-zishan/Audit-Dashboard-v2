@@ -404,7 +404,7 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
         <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="HR Helpline" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> HR Helpline</label>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="RM" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> RM</label>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Second Tier" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Second Tier</label>
-        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="GPFI & ALO" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> GPFI &amp; ALO</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="GPFI &amp; ALO" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> GPFI &amp; ALO</label>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Tier_Whatsapp" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Tier_Whatsapp</label>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem" onclick="event.stopPropagation()"><input type="checkbox" class="skill-chk" value="Skitto_121" onchange="onSkillChkChange()" style="accent-color:var(--blue)"> Skitto_121</label>
         <div style="padding:4px 14px 2px;font-size:0.65rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;border-top:1px solid var(--border-muted);margin-top:2px">Digital</div>
@@ -586,32 +586,45 @@ const SKILLS = Object.keys(TGT);
 const COLORS  = ['#58a6ff','#3fb950','#e3b341','#f85149','#bc8cff','#39d353','#79c0ff','#ff7b72','#ffa657','#d2a8ff','#f0883e','#56d364','#a5d6ff','#ffa198','#7ee787','#db6d28','#388bfd'];
 const COLORS_A = COLORS.map(c => c + '55');
 
-// ── COLUMN MAPS (verified against actual CSVs) ──────────────────────────────
+// ── COLUMN MAPS ─────────────────────────────────────────────────────────────
+// All indices are 0-based, cross-verified against index.html (Google Sheets gviz version).
+// The gviz API returns every column including blanks, so these indices match the
+// raw CSV export column positions exactly.
+//
+// INBOUND_DUMP columns (verified from original dashboard):
+//   date:A(0)  agentId:GM(194)  tl:GO(196)  empPass:GU(203)  empFail:GV(204)
+//   result:GZ(205)  skill:HB(207)  party:HG(212)
+//   RTC: not a dedicated column — derived from result (Pass→rtcP+1, Fail→rtcF+1)
+//   month: derived from date column A(0)
 const INBOUND_MAP = {
-  result:205, skill:207, party:212, agentId:194, tl:196,
+  date:0, result:205, skill:207, party:212, agentId:194, tl:196,
   empPass:203, empFail:204,
-  rtcPass:210, rtcFail:211,
-  month:218,
+  rtcPass:null, rtcFail:null,   // null = derive from result (Pass→+1 rtcP, Fail→+1 rtcF)
+  month:null,                    // null = derive from date column
   emp:{
-    'Warm Greetings':28,'A&U':31,'Speech Clarity':34,'Proper Listening':37,
-    'Time/Hold Mgt':40,'Personalization':43,'Emotional Tone':46,'Closing':49
+    'Greetings':28,'A&U':31,'Clarity':34,'Listening':37,
+    'Time Mgt':40,'Personalization':43,'Tone':46,'Closing':49
   },
   ce:{
     'Identification':58,'Information':61,'Execution':64,
     'Misbehave':70,'Improper Resp':73,'Hold':76,'Hangup':79,
-    'Unauth Exec':85,'Unauth Info':88,'Verification':91,'Access':94,
+    'Unauth Exec':84,'Unauth Info':88,'Verification':91,'Access':94,
     'Product':100,'Process':103,'Info-NonAgent':106,'System':109,'Perf':112
   }
 };
 
+// DIGITAL_DUMP columns (verified from original dashboard):
+//   date:A(0)  agentId:HH(215)  tl:HI(216)  empPass:HJ(217)  empFail:HK(218)
+//   result:HL(219)  rtcPass:HO(222)  rtcFail:HP(223)  skill:HQ(224)  party:HU(228)
+//   month: derived from date column A(0)
 const DIGITAL_MAP = {
-  result:219, skill:224, party:228, agentId:215, tl:216,
+  date:0, result:219, skill:224, party:228, agentId:215, tl:216,
   empPass:217, empFail:218,
   rtcPass:222, rtcFail:223,
-  month:229,
+  month:null,                    // null = derive from date column
   emp:{
     'Warm Welcome':43,'A&U':46,'Eff Comm':49,'Attentive':52,
-    'Time/Hold Mgt':55,'Personalization':58,'Emotional':61,'Closing':64
+    'Time Mgt':55,'Personalization':58,'Emotional':61,'Closing':64
   },
   ce:{
     'Identification':70,'Information':73,'Execution':76,
@@ -621,11 +634,15 @@ const DIGITAL_MAP = {
   }
 };
 
+// SKITTO_121_DUMP columns (verified from original dashboard):
+//   date:A(0)  agentId:GM(194)  tl:GN(195)  empPass:GO(196)  empFail:GP(197)
+//   result:GQ(198)  rtcPass:GT(201)  rtcFail:GU(202)  skill:GV(203)  month:GW(204)
+//   No party column — all rows are GENEX
 const SKITTO_MAP = {
-  result:198, skill:203, agentId:194, tl:195,
+  date:0, result:198, skill:203, agentId:194, tl:195,
   empPass:196, empFail:197,
   rtcPass:201, rtcFail:202,
-  month:204,
+  month:204,                     // has explicit month-name column GW
   emp:{
     'Warm Greetings':28,'A&U':31,'Speech Clarity':34,'Proper Listening':37,
     'Time/Hold Mgt':40,'Personalization':43,'Emotional Tone':46,'Closing':49
@@ -820,6 +837,26 @@ function parseCSVToRows(text) {
 }
 
 // ═══════════════════════════════════════════
+//  DATE → MONTH HELPER
+// ═══════════════════════════════════════════
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+function parseDateToMonth(val) {
+  if (!val) return null;
+  const raw = String(val).trim();
+  // gviz-style date literal: Date(2025,2,26,...) — kept for compatibility
+  const gvizMatch = raw.match(/^(?:new\s+)?Date\((\d+),(\d+),(\d+)/i);
+  if (gvizMatch) {
+    const d = new Date(Number(gvizMatch[1]), Number(gvizMatch[2]), Number(gvizMatch[3]));
+    return isNaN(d) ? null : MONTHS[d.getMonth()];
+  }
+  // Plain date string: MM/DD/YYYY or YYYY-MM-DD
+  const d = new Date(raw);
+  if (!isNaN(d) && d.getFullYear() > 2000) return MONTHS[d.getMonth()];
+  return null;
+}
+
+// ═══════════════════════════════════════════
 //  ROW PARSERS
 // ═══════════════════════════════════════════
 function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
@@ -842,22 +879,50 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
 
     // Party: use column if available, else use defaultParty
     let party = defaultParty || null;
-    if (map.party !== undefined) {
+    if (map.party !== undefined && map.party !== null) {
       const p = normalizeParty(String(row[map.party] || ''));
       if (p) party = p;
     }
     if (!party) continue;
 
-    // Month: prefer value in CSV row over filename month
-    const monthRaw = String(row[map.month] || '').trim();
-    const month    = monthRaw;
-    if (!month) continue; // skip rows with no Month Name
-    const year     = fileYear;
+    // Month: if map.month is a column index, read it directly.
+    // If map.month is null, derive from date column A(0).
+    // CRITICAL: always enforce that the row's month matches the file's declared
+    // month. Each CSV is a per-month dump but the raw sheet may contain rows
+    // from other months — filtering here prevents double-counting when "All Months"
+    // is selected (the 21128 vs 21613 discrepancy).
+    let month = null;
+    if (map.month !== null && map.month !== undefined) {
+      const mRaw = String(row[map.month] || '').trim();
+      if (!mRaw) continue;
+      month = mRaw;
+      // Enforce fileMonth match (case-insensitive)
+      if (fileMonth && month.toLowerCase() !== fileMonth.toLowerCase()) continue;
+    } else {
+      // Derive month from date in column A (0)
+      const derived = parseDateToMonth(row[0]);
+      if (!derived) continue; // skip rows with no parseable date
+      month = derived;
+      // Only keep rows whose derived month matches the file's declared month
+      if (fileMonth && month.toLowerCase() !== fileMonth.toLowerCase()) continue;
+    }
+    if (!month) continue;
+
+    const year = fileYear;
 
     const empPass = Number(row[map.empPass]) || 0;
     const empFail = Number(row[map.empFail]) || 0;
-    const rtcPass = Number(row[map.rtcPass]) || 0;
-    const rtcFail = Number(row[map.rtcFail]) || 0;
+
+    // RTC: if map has explicit columns use them; otherwise derive from result
+    let rtcPass, rtcFail;
+    if (map.rtcPass !== null && map.rtcPass !== undefined) {
+      rtcPass = Number(row[map.rtcPass]) || 0;
+      rtcFail = Number(row[map.rtcFail]) || 0;
+    } else {
+      // No dedicated RTC columns — treat CE Pass/Fail as RTC proxy (matches original)
+      rtcPass = result === 'Pass' ? 1 : 0;
+      rtcFail = result === 'Pass' ? 0 : 1;
+    }
 
     const ceParams = {}, empParams = {};
     Object.entries(map.ce).forEach(([k, ci]) => {
@@ -1499,34 +1564,6 @@ function showToast(msg,type='') {
 }
 
 // ═══════════════════════════════════════════
-//  AUTO-REFRESH & COUNTDOWN
-// ═══════════════════════════════════════════
-const AUTO_REFRESH_MS = 60 * 60 * 1000; // 1 hour
-let nextRefreshAt = null;
-let countdownInterval = null;
-
-function startCountdown() {
-  nextRefreshAt = Date.now() + AUTO_REFRESH_MS;
-  if (countdownInterval) clearInterval(countdownInterval);
-  countdownInterval = setInterval(() => {
-    const remaining = nextRefreshAt - Date.now();
-    if (remaining <= 0) {
-      document.getElementById('nextRefreshCountdown').textContent = 'Refreshing…';
-      return;
-    }
-    const h = Math.floor(remaining / 3600000);
-    const m = Math.floor((remaining % 3600000) / 60000);
-    const s = Math.floor((remaining % 60000) / 1000);
-    const pad = n => String(n).padStart(2, '0');
-    document.getElementById('nextRefreshCountdown').textContent =
-      `Next refresh in ${pad(h)}:${pad(m)}:${pad(s)}`;
-  }, 1000);
-}
-
-// ═══════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════
-// ═══════════════════════════════════════════
 //  SKILL MULTI-SELECT
 // ═══════════════════════════════════════════
 function toggleSkillDrop(e) {
@@ -1547,7 +1584,7 @@ document.addEventListener('click', () => {
 });
 function getSelectedSkills() {
   const allChk = document.getElementById('skillOpt_all');
-  if (allChk && allChk.checked) return null; // null = all skills
+  if (allChk && allChk.checked) return null; // null = show all
   const checked = [...document.querySelectorAll('.skill-chk:checked')].map(c => c.value);
   return checked.length ? new Set(checked) : null;
 }
@@ -1594,8 +1631,44 @@ function clearAllSkills() {
   document.querySelectorAll('.skill-chk').forEach(c => c.checked = false);
   updateSkillDropBtn();
 }
+function filterBySkill(skill) {
+  clearAllSkills();
+  const chk = document.querySelector(`.skill-chk[value="${CSS.escape(skill)}"]`);
+  if (chk) chk.checked = true;
+  updateSkillDropBtn();
+  applyFilters();
+  showToast(`🔍 Filtered by: ${skill}`, 'success');
+}
 
+// ═══════════════════════════════════════════
+//  AUTO-REFRESH & COUNTDOWN
+// ═══════════════════════════════════════════
+const AUTO_REFRESH_MS = 60 * 60 * 1000; // 1 hour
+let nextRefreshAt = null;
+let countdownInterval = null;
 
+function startCountdown() {
+  nextRefreshAt = Date.now() + AUTO_REFRESH_MS;
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    const remaining = nextRefreshAt - Date.now();
+    if (remaining <= 0) {
+      document.getElementById('nextRefreshCountdown').textContent = 'Refreshing…';
+      return;
+    }
+    const h = Math.floor(remaining / 3600000);
+    const m = Math.floor((remaining % 3600000) / 60000);
+    const s = Math.floor((remaining % 60000) / 1000);
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('nextRefreshCountdown').textContent =
+      `Next refresh in ${pad(h)}:${pad(m)}:${pad(s)}`;
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
   initCharts();
   await fetchData();
   startCountdown();
