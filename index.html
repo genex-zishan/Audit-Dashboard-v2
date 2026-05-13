@@ -299,8 +299,8 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
 <!-- LOADING -->
 <div id="loadingOverlay">
   <div class="loader-ring"></div>
-  <div class="loader-text" id="loaderText">Loading Audit Data…</div>
-  <div class="loader-sub" id="loaderSub">Fetching from GitHub</div>
+  <div class="loader-text" id="loaderText">Please wait, while we fetch data for you!</div>
+  <div class="loader-sub" id="loaderSub"></div>
   <div class="loader-progress"><div class="loader-progress-bar" id="loaderBar"></div></div>
 </div>
 
@@ -388,7 +388,7 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
 <div class="main" id="mainContent" style="display:none">
 
   <!-- DATA STATUS -->
-  <div class="data-status-bar" id="dataStatusBar">
+  <div class="data-status-bar" id="dataStatusBar" style="display:none">
     <span class="ds-label">📁 Loaded Files</span>
     <div id="dsFiles" style="display:flex;gap:8px;flex-wrap:wrap"></div>
   </div>
@@ -830,11 +830,11 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
 async function fetchData() {
   const btn = document.getElementById('refreshBtn');
   btn.classList.add('spinning');
-  setLoaderProgress(5, 'Scanning GitHub data folder…');
+  setLoaderProgress(5, '');
 
   try {
     const allFiles = await listGitHubDataFiles();
-    setLoaderProgress(20, `Found ${allFiles.length} file(s), resolving…`);
+    setLoaderProgress(20, '');
 
     if (!allFiles.length) {
       showToast('⚠️ No data files found in data/ folder yet.', 'error');
@@ -871,11 +871,11 @@ async function fetchData() {
       }
 
       done++;
-      setLoaderProgress(20 + Math.round((done / toLoad.length) * 70), `Loaded ${done}/${toLoad.length} files…`);
+      setLoaderProgress(20 + Math.round((done / toLoad.length) * 70), '');
     }
 
     rawRows = allRows;
-    setLoaderProgress(100, `Loaded ${rawRows.length} audit records`);
+    setLoaderProgress(100, '');
 
     // Populate year filter
     const years = [...new Set(rawRows.map(r => r.year).filter(Boolean))].sort().reverse();
