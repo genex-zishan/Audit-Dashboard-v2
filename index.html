@@ -373,6 +373,35 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
   </div>
   <div class="filter-sep"></div>
   <div class="filter-group">
+    <span class="filter-label">Skill</span>
+    <select class="filter-select" id="fSkill" onchange="applyFilters()" style="min-width:180px">
+      <option value="all">All Skills</option>
+      <optgroup label="── Inbound ──">
+        <option value="Mass">Mass</option>
+        <option value="Premium">Premium</option>
+        <option value="KCP">KCP</option>
+        <option value="Retailer">Retailer</option>
+        <option value="158">158</option>
+        <option value="HR Helpline">HR Helpline</option>
+        <option value="RM">RM</option>
+        <option value="Second Tier">Second Tier</option>
+        <option value="GPFI & ALO">GPFI & ALO</option>
+        <option value="Tier_Whatsapp">Tier_Whatsapp</option>
+        <option value="Skitto_121">Skitto_121</option>
+      </optgroup>
+      <optgroup label="── Digital ──">
+        <option value="Live Chat">Live Chat</option>
+        <option value="Email">Email</option>
+        <option value="Social Media">Social Media</option>
+        <option value="Skitto_Email">Skitto_Email</option>
+        <option value="Skitto_Messenger">Skitto_Messenger</option>
+        <option value="Skitto_Social Media">Skitto_Social Media</option>
+        <option value="Whatsapp">Whatsapp</option>
+      </optgroup>
+    </select>
+  </div>
+  <div class="filter-sep"></div>
+  <div class="filter-group">
     <span class="filter-label">Result</span>
     <select class="filter-select" id="fResult" onchange="applyFilters()">
       <option value="all">Pass & Fail</option>
@@ -803,7 +832,8 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
 
     // Month: prefer value in CSV row over filename month
     const monthRaw = String(row[map.month] || '').trim();
-    const month    = monthRaw || fileMonth;
+    const month    = monthRaw;
+    if (!month) continue; // skip rows with no Month Name
     const year     = fileYear;
 
     const empPass = Number(row[map.empPass]) || 0;
@@ -960,7 +990,7 @@ function updateDataStatusBar() {
 //  FILTERS
 // ═══════════════════════════════════════════
 function clearFilters() {
-  ['fMonth','fParty','fChannel','fResult','fYear'].forEach(id => document.getElementById(id).value = 'all');
+  ['fMonth','fParty','fChannel','fSkill','fResult','fYear'].forEach(id => document.getElementById(id).value = 'all');
   document.getElementById('fSearch').value = '';
   applyFilters();
 }
@@ -970,6 +1000,7 @@ function applyFilters() {
   const year    = document.getElementById('fYear').value;
   const party   = document.getElementById('fParty').value;
   const channel = document.getElementById('fChannel').value;
+  const skill   = document.getElementById('fSkill').value;
   const result  = document.getElementById('fResult').value;
   const search  = document.getElementById('fSearch').value.toLowerCase();
 
@@ -978,6 +1009,7 @@ function applyFilters() {
     (year    === 'all' || r.year    === year)     &&
     (party   === 'all' || r.party   === party)   &&
     (channel === 'all' || r.channel === channel) &&
+    (skill   === 'all' || r.skill   === skill)   &&
     (result  === 'all' || r.result  === result)  &&
     (!search || r.agentId.toLowerCase().includes(search) || r.tl.toLowerCase().includes(search))
   );
