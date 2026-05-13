@@ -527,7 +527,6 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
 const GITHUB_OWNER = 'genex-zishan';
 const GITHUB_REPO  = 'Audit-Dashboard-v2';
 const DATA_BRANCH  = 'main';
-const GITHUB_TOKEN = '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';
 
 // CE% targets per skill
 const TGT = {
@@ -656,8 +655,7 @@ let currentDrillSkill = '';
 //  GITHUB FETCH
 // ═══════════════════════════════════════════
 const AUTH_HEADERS = {
-  Accept: 'application/vnd.github.v3+json',
-  Authorization: `Bearer ${GITHUB_TOKEN}`
+  Accept: 'application/vnd.github.v3+json'
 };
 
 // Cache: store loaded data in memory so re-renders don't hit the API again
@@ -675,7 +673,7 @@ async function listGitHubDataFiles() {
 }
 
 async function fetchGitHubCSV(downloadUrl) {
-  const res = await fetch(downloadUrl, { headers: AUTH_HEADERS });
+  const res = await fetch(downloadUrl + '?cachebust=' + Date.now());
   if (!res.ok) throw new Error(`Failed to fetch CSV: ${res.status}`);
   return res.text();
 }
