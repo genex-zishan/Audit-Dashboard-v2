@@ -317,7 +317,11 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
   </div>
   <div class="header-right">
     <div class="live-badge"><span class="live-dot"></span> Live</div>
-    <button class="refresh-btn" id="refreshBtn" onclick="fetchData()">
+    <div style="display:flex;align-items:center;gap:6px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;font-size:0.75rem;color:var(--text-secondary);">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="nextRefreshCountdown">Next refresh in 01:00:00</span>
+    </div>
+    <button class="refresh-btn" id="refreshBtn" onclick="fetchData(true);startCountdown()">
       <svg id="refreshIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
       Refresh
     </button>
@@ -523,6 +527,7 @@ tr.drilldown-row td:first-child{padding-left:40px;color:var(--text-muted)}
 const GITHUB_OWNER = 'genex-zishan';
 const GITHUB_REPO  = 'Audit-Dashboard-v2';
 const DATA_BRANCH  = 'main';
+const GITHUB_TOKEN = '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';
 
 // CE% targets per skill
 const TGT = {
@@ -650,9 +655,19 @@ let currentDrillSkill = '';
 // ═══════════════════════════════════════════
 //  GITHUB FETCH
 // ═══════════════════════════════════════════
+const AUTH_HEADERS = {
+  Accept: 'application/vnd.github.v3+json',
+  Authorization: `Bearer ${GITHUB_TOKEN}`
+};
+
+// Cache: store loaded data in memory so re-renders don't hit the API again
+let dataCache = null;
+let dataCacheTime = null;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 async function listGitHubDataFiles() {
   const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/data?ref=${DATA_BRANCH}`;
-  const res = await fetch(url, { headers: { Accept: 'application/vnd.github.v3+json' } });
+  const res = await fetch(url, { headers: AUTH_HEADERS });
   if (res.status === 404) return [];
   if (!res.ok) throw new Error(`GitHub listing failed: ${res.status}`);
   const files = await res.json();
@@ -660,7 +675,7 @@ async function listGitHubDataFiles() {
 }
 
 async function fetchGitHubCSV(downloadUrl) {
-  const res = await fetch(downloadUrl + '?cachebust=' + Date.now());
+  const res = await fetch(downloadUrl, { headers: AUTH_HEADERS });
   if (!res.ok) throw new Error(`Failed to fetch CSV: ${res.status}`);
   return res.text();
 }
@@ -827,9 +842,22 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
 // ═══════════════════════════════════════════
 //  MAIN FETCH
 // ═══════════════════════════════════════════
-async function fetchData() {
+async function fetchData(forceRefresh = false) {
   const btn = document.getElementById('refreshBtn');
   btn.classList.add('spinning');
+
+  // Use cache if available and not expired and not a forced refresh
+  const now = Date.now();
+  if (!forceRefresh && dataCache && dataCacheTime && (now - dataCacheTime < CACHE_TTL_MS)) {
+    rawRows = dataCache.rows;
+    loadedFiles = dataCache.files;
+    applyFilters();
+    showMain();
+    btn.classList.remove('spinning');
+    showToast('✅ Data loaded from cache', 'success');
+    return;
+  }
+
   setLoaderProgress(5, '');
 
   try {
@@ -875,6 +903,8 @@ async function fetchData() {
     }
 
     rawRows = allRows;
+    dataCache = { rows: allRows, files: loadedFiles };
+    dataCacheTime = Date.now();
     setLoaderProgress(100, '');
 
     // Populate year filter
@@ -1421,11 +1451,41 @@ function showToast(msg,type='') {
 }
 
 // ═══════════════════════════════════════════
+//  AUTO-REFRESH & COUNTDOWN
+// ═══════════════════════════════════════════
+const AUTO_REFRESH_MS = 60 * 60 * 1000; // 1 hour
+let nextRefreshAt = null;
+let countdownInterval = null;
+
+function startCountdown() {
+  nextRefreshAt = Date.now() + AUTO_REFRESH_MS;
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    const remaining = nextRefreshAt - Date.now();
+    if (remaining <= 0) {
+      document.getElementById('nextRefreshCountdown').textContent = 'Refreshing…';
+      return;
+    }
+    const h = Math.floor(remaining / 3600000);
+    const m = Math.floor((remaining % 3600000) / 60000);
+    const s = Math.floor((remaining % 60000) / 1000);
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('nextRefreshCountdown').textContent =
+      `Next refresh in ${pad(h)}:${pad(m)}:${pad(s)}`;
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', async () => {
   initCharts();
   await fetchData();
+  startCountdown();
+  setInterval(() => {
+    fetchData(true);
+    startCountdown();
+  }, AUTO_REFRESH_MS);
 });
 </script>
 </body>
