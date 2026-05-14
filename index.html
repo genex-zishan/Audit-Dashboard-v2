@@ -655,6 +655,51 @@ const SKITTO_MAP = {
   }
 };
 
+// RM_DUMP columns (0-based) — verified against actual CSV (210 cols):
+//   date:A(0) [fallback: HB(209) "Eval Date" for rows where A is blank]
+//   agentId:GG(188) "VDI ID"   tl:GI(190) "Team Leader"
+//   skill:GM(194)  empPass:GO(196)  empFail:GP(197)
+//   result(CE):GQ(198)  rtcPass:GV(203)  rtcFail:GW(204)  party:GX(205)
+//   Empathy sub-params: AC(28) AF(31) AI(34) AL(37) AO(40) AR(43) AU(46) AX(49)
+//   CE sub-params: BD(55) BG(58) BJ(61) BM(64) BP(67) BS(70) BV(73) BY(76)
+//                  CE(82) CH(85) CK(88) CN(91) CT(97) CW(100) CZ(103) DC(106) DF(109)
+const RM_MAP = {
+  date:0, dateFallback:209,   // HB "Eval Date" used when col A is blank
+  result:198, skill:194, party:205, agentId:188, tl:190,
+  empPass:196, empFail:197,
+  rtcPass:203, rtcFail:204,
+  month:null,  // derive from date column A(0) or fallback HB(209)
+  emp:{
+    'Warm Intro & Relationship':28,
+    'Permission & Clarification':31,
+    'Speech Clarity':34,
+    'Service Orientation':37,
+    'Proper Listening':40,
+    'Rapport Building':43,
+    'Emotional Tone & Courtesy':46,
+    'Closing Courtesy':49
+  },
+  ce:{
+    'Identification':55,
+    'Information':58,
+    'Execution':61,
+    'Professional Mannerism':64,
+    'Misbehave/Unprofessional':67,
+    'Improper Response':70,
+    'Unnecessary Hold':73,
+    'Unusual Call Hangup':76,
+    'Unauth Execution':82,
+    'Unauth Info Shared':85,
+    'Verification Not Followed':88,
+    'Access Sharing':91,
+    'CC Product':97,
+    'CC Process':100,
+    'CC Information':103,
+    'CC System':106,
+    'System/Tool Performance':109
+  }
+};
+
 // ── SKILL NAME NORMALIZATION ────────────────────────────────────────────────
 // Maps raw values found in CSVs → canonical skill names used in TGT
 const SKILL_ALIASES = {
@@ -850,7 +895,13 @@ function parseDateToMonth(val) {
     const d = new Date(Number(gvizMatch[1]), Number(gvizMatch[2]), Number(gvizMatch[3]));
     return isNaN(d) ? null : MONTHS[d.getMonth()];
   }
-  // Plain date string: MM/DD/YYYY or YYYY-MM-DD
+  // DD-MM-YYYY (e.g. RM fallback date "23-04-2026")
+  const dmyMatch = raw.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if (dmyMatch) {
+    const d = new Date(Number(dmyMatch[3]), Number(dmyMatch[2]) - 1, Number(dmyMatch[1]));
+    return isNaN(d) ? null : MONTHS[d.getMonth()];
+  }
+  // Plain date string: MM/DD/YYYY, YYYY-MM-DD, or "4/1/2026 11:56:01 AM"
   const d = new Date(raw);
   if (!isNaN(d) && d.getFullYear() > 2000) return MONTHS[d.getMonth()];
   return null;
@@ -861,10 +912,17 @@ function parseDateToMonth(val) {
 // ═══════════════════════════════════════════
 function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
   const rows = [];
+  // Compute the minimum required column index from the map so sparse CSVs
+  // (where trailing empty columns are stripped) are not wrongly rejected.
+  const minRequiredCol = Math.max(
+    map.agentId, map.result, map.skill,
+    map.empPass || 0, map.empFail || 0,
+    map.rtcPass || 0, map.rtcFail || 0
+  );
   // Row 0 is the header — skip it, start at 1
   for (let i = 1; i < grid.length; i++) {
     const row = grid[i];
-    if (!row || row.length < 50) continue;
+    if (!row || row.length < minRequiredCol) continue;
 
     const agentId = String(row[map.agentId] || '').trim();
     if (!agentId) continue;
@@ -880,7 +938,8 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
     // Party: use column if available, else use defaultParty
     let party = defaultParty || null;
     if (map.party !== undefined && map.party !== null) {
-      const p = normalizeParty(String(row[map.party] || ''));
+      const partyVal = map.party < row.length ? String(row[map.party] || '') : '';
+      const p = normalizeParty(partyVal);
       if (p) party = p;
     }
     if (!party) continue;
@@ -899,8 +958,12 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
       // Enforce fileMonth match (case-insensitive)
       if (fileMonth && month.toLowerCase() !== fileMonth.toLowerCase()) continue;
     } else {
-      // Derive month from date in column A (0)
-      const derived = parseDateToMonth(row[0]);
+      // Derive month from date in column A (0), with optional fallback column
+      let rawDate = row[0];
+      if ((!rawDate || String(rawDate).trim() === '') && map.dateFallback !== undefined) {
+        rawDate = row[map.dateFallback];
+      }
+      const derived = parseDateToMonth(rawDate);
       if (!derived) continue; // skip rows with no parseable date
       month = derived;
       // Only keep rows whose derived month matches the file's declared month
@@ -926,11 +989,11 @@ function parseRows(grid, map, channel, fileMonth, fileYear, defaultParty) {
 
     const ceParams = {}, empParams = {};
     Object.entries(map.ce).forEach(([k, ci]) => {
-      const v = String(row[ci] || '').trim().toLowerCase();
+      const v = ci < row.length ? String(row[ci] || '').trim().toLowerCase() : '';
       ceParams[k] = v === 'pass' ? 'Pass' : v === 'fail' ? 'Fail' : null;
     });
     Object.entries(map.emp).forEach(([k, ci]) => {
-      const v = String(row[ci] || '').trim().toLowerCase();
+      const v = ci < row.length ? String(row[ci] || '').trim().toLowerCase() : '';
       empParams[k] = v === 'pass' ? 'Pass' : v === 'fail' ? 'Fail' : null;
     });
 
@@ -1001,6 +1064,8 @@ async function fetchData(forceRefresh = false) {
           rows = parseRows(grid, DIGITAL_MAP, 'Digital', month, year, null);
         } else if (sheetType === 'SKITTO') {
           rows = parseRows(grid, SKITTO_MAP, 'Inbound', month, year, 'GENEX');
+        } else if (sheetType === 'RM') {
+          rows = parseRows(grid, RM_MAP, 'Inbound', month, year, null);
         }
 
         allRows.push(...rows);
